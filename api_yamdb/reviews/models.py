@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 # Create your models here.
@@ -38,11 +39,7 @@ class Title(models.Model):
     year = models.IntegerField()
     description = models.TextField()
     genre = models.ManyToManyField(
-        Genre,
-        on_delete=models.SET_NULL,
-        related_name='reviews',
-        blank=True,
-        null=True
+        Genre
     )
     category = models.ForeignKey(
         Category,
