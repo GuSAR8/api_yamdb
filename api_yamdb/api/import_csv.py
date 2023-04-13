@@ -1,7 +1,8 @@
 # Выполнить такое действие:
-# 	python manage.py import_data --paths static/data/users.csv static/data/category.csv static/data/genre.csv static/data/titles.csv  --models User Category Genre Title
-# 	python manage.py import_data --paths static/data/review.csv static/data/comments.csv  --models Review Comment
-# 	python manage.py import_data --paths static/data/genre_title.csv --tables reviews_title_genre
+# python manage.py import_csv --paths static/data/users.csv static/data/category.csv --models User Category
+# python manage.py import_csv --paths static/data/genre.csv static/data/titles.csv  --models Genre Title
+# python manage.py import_csv --paths static/data/review.csv static/data/comments.csv  --models Review Comment
+# python manage.py import_csv --paths static/data/genre_title.csv --tables GenreTitle или --models GenreTitle
 
 import csv
 import os
