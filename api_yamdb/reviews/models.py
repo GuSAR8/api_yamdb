@@ -1,7 +1,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
-# from users.models import User
+from users.models import User
 
 
 class Genre(models.Model):
@@ -89,7 +89,7 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
-    """Модель Отзывов"""
+    """Модель Отзывов и Рейтинга."""
     text = models.TextField(
         help_text='Введите текст отзыва',
         verbose_name='Текст отзыва',
@@ -131,7 +131,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    """Модель Комментариев"""
+    """Модель Комментариев."""
 
     review = models.ForeignKey(
         Review,
