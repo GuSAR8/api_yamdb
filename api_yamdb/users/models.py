@@ -46,7 +46,7 @@ class User(AbstractUser):  # Создаем свой класс пользова
         verbose_name='Статус',
         max_length=9,
         choices=ROLES,
-        default='USER'
+        default=USER
     )
 
     class Meta:
