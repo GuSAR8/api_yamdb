@@ -4,10 +4,13 @@ from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):  # Создаем свой класс пользователя
     #  Прописываем возможные роли
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    USER = 'user'
     ROLES = [
-        ('User', 'user'),
-        ('Moderator', 'moderator'),
-        ('Admin', 'admin'),
+        (ADMIN, 'Администратор'),
+        (MODERATOR, 'Модератор'),
+        (USER, 'Пользователь'),
     ]
 
     username = models.CharField(
@@ -43,12 +46,13 @@ class User(AbstractUser):  # Создаем свой класс пользова
         verbose_name='Статус',
         max_length=9,
         choices=ROLES,
-        default='User'
+        default='USER'
     )
 
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        ordering = ("id",)
 
     def __str__(self):
         return self.username
