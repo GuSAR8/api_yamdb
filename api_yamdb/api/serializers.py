@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from reviews.models import Comment, Review, Title
+from reviews.models import Comment, Review, Title, Category, Genre
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -43,3 +43,52 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comment
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Category
+        exclude = ('id', )
+
+
+class CategoryField(serializers.SlugRelatedField):
+
+    def to_representation(self, value):
+        serializer = CategorySerializer(value)
+        return serializer.data
+
+
+class GenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Genre
+        exclude = ('id', )
+
+
+class GenreField(serializers.SlugRelatedField):
+
+    def to_representation(self, value):
+        serializer = GenreSerializer(value)
+        return serializer.data
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        required=False,
+        many=True,
+    )
+    category = CategoryField(
+        queryset=Category.objects.all(),
+        slug_field='slug',
+        required=False,
+    )
+    rating = serializers.IntegerField(
+        required=False
+    )
+
+    class Meta:
+        model = Title
+        fields = '__all__'
