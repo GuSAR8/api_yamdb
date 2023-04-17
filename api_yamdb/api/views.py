@@ -4,12 +4,22 @@ from api.serializers import (CommentSerializer, ReviewSerializer,
                              CategorySerializer, GenreSerializer,
                              TitleSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.db.models import Avg
 from rest_framework import viewsets, mixins, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from http.client import BAD_REQUEST, OK
 from reviews.models import Review, Title, Category, Genre
+from users.models import User
+from .serializers import (
+    SignUpSerializer, TokenSerializer
+)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -83,3 +93,36 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+
+
+@api_view(['POST'])
+def signup(request):
+    serializer = SignUpSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    user = get_object_or_404(
+        User,
+        username=serializer.validated_data['username']
+    )
+    confirmation_code = default_token_generator.make_token(user)
+    send_mail(
+        subject='Регистрация',
+        message=f'Код: {confirmation_code}',
+        from_email=None,
+        recipient_list=[user.email],
+    )
+    return Response(serializer.data, status=OK)
+
+
+@api_view(['POST'])
+def get_token(request):
+    serializer = TokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.data['username']
+    confirmation_code = serializer.data['confirmation_code']
+    user = get_object_or_404(User, username=username)
+    if confirmation_code != user.confirmation_code:
+        return Response(status=BAD_REQUEST)
+    refresh = RefreshToken.for_user(user)
+    return Response({'Токен - ': str(refresh.access_token)},
+                    status=OK)

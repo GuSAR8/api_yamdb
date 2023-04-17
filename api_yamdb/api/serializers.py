@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from reviews.models import Comment, Review, Title, Category, Genre
+from users.models import User
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -92,3 +93,28 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
+
+
+class SignUpSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+
+    def validate_username(self, value):
+        if value.lower() == 'me':
+            raise serializers.ValidationError(
+                'Называть "me" запрещено!!! Придумайте другое имя.'
+            )
+        return value
+
+    class Meta:
+        fields = ('username', 'email')
+        model = User
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')

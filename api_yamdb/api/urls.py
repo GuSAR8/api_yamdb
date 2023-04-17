@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (CommentViewSet, ReviewViewSet, CategoryViewSet,
-                    GenreViewSet, TitleViewSet)
+                    GenreViewSet, TitleViewSet, signup, get_token)
 
 router = DefaultRouter()
 router.register('categories', CategoryViewSet, basename='category')
@@ -20,6 +20,6 @@ router.register(
 
 urlpatterns = [
     path('v1/', include(router.urls)),
-    # path('v1/', include('djoser.urls')),
-    # path('v1/', include('djoser.urls.jwt')),
+    path('v1/auth/signup/', signup, name='singup'),
+    path('v1/auth/token/', get_token, name='token'),
 ]
