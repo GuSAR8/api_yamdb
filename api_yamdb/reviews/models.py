@@ -7,8 +7,8 @@ from users.models import User
 class Genre(models.Model):
     """Модель Жанров."""
 
-    name = models.CharField('Жанры', max_length=200)
-    slug = models.SlugField('slug', max_length=100, unique=True)
+    name = models.CharField('Жанры', max_length=256)
+    slug = models.SlugField('slug', max_length=50, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -22,8 +22,8 @@ class Genre(models.Model):
 class Category(models.Model):
     """Модель Категорий."""
 
-    name = models.CharField('Категорий', max_length=200)
-    slug = models.SlugField('slug', max_length=100, unique=True)
+    name = models.CharField('Категорий', max_length=256)
+    slug = models.SlugField('slug', max_length=50, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -36,7 +36,7 @@ class Category(models.Model):
 
 class Title(models.Model):
     """Модель Произведения."""
-    name = models.CharField('Название произведения', max_length=200)
+    name = models.CharField('Название произведения', max_length=256)
     year = models.PositiveSmallIntegerField(verbose_name='Год издания')
     category = models.ForeignKey(
         Category,
