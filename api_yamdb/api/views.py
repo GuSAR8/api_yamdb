@@ -2,7 +2,8 @@ from api.filters import TitleFilter
 from api.permissions import IsUserAdminModeratorOrReadOnly, IsAdminOrReadOnly
 from api.serializers import (CommentSerializer, ReviewSerializer,
                              CategorySerializer, GenreSerializer,
-                             TitleSerializer)
+                             TitleSerializer, SignUpSerializer,
+                             TokenSerializer, UserSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -11,15 +12,13 @@ from rest_framework import viewsets, mixins, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
-from rest_framework.decorators import api_view
+from rest_framework.decorators import action, api_view
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from http.client import BAD_REQUEST, OK
 from reviews.models import Review, Title, Category, Genre
 from users.models import User
-from .serializers import (
-    SignUpSerializer, TokenSerializer
-)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -93,6 +92,28 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = (filters.SearchFilter,)
+    lookup_field = 'username'
+    search_fields = ('username',)
+
+    @action(
+        methods=['get', 'patch'],
+        detail=False,
+        url_path='me',
+        permission_classes=[IsAuthenticated]
+    )
+    def set_profile(self, request, pk=None):
+        user = get_object_or_404(User, pk=request.user.id)
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=OK)
 
 
 @api_view(['POST'])
