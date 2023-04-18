@@ -107,6 +107,8 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
+AUTH_USER_MODEL = 'users.User'
+
 REST_FRAMEWORK = {
     # permission
     'DEFAULT_PERMISSION_CLASSES': [
@@ -125,6 +127,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = ((BASE_DIR, "sent_emails"))
 
 SIMPLE_JWT = {
     # Устанавливаем срок жизни токена

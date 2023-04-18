@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from rest_framework_simplejwt.serializers import TokenObtainSerializer
+from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Comment, Review, Title, Category, Genre
 from users.models import User
 
@@ -124,9 +126,18 @@ class ProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ("username", "email", "role",)
 
 
-class SignUpSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
+class SignupSerializer(serializers.ModelSerializer):
+
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())])
+
+    def validate_email(self, attrs):
+        if attrs == self.context["request"].user:
+            raise serializers.ValidationError(
+                "Такой email уже зарегистрирован!"
+            )
+        return attrs
 
     def validate_username(self, value):
         if value.lower() == 'me':
@@ -140,10 +151,20 @@ class SignUpSerializer(serializers.ModelSerializer):
         model = User
 
 
-class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    confirmation_code = serializers.CharField(required=True)
+class TokenSerializer(TokenObtainSerializer):
+    token_class = AccessToken
 
-    class Meta:
-        model = User
-        fields = ('username', 'confirmation_code')
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["confirmation_code"] = serializers.CharField(
+            required=False
+        )
+        self.fields["password"] = serializers.HiddenField(default="")
+
+    def validate(self, attrs):
+        self.user = get_object_or_404(User, username=attrs["username"])
+        if self.user.confirmation_code != attrs["confirmation_code"]:
+            raise serializers.ValidationError("Неверный код подтверждения")
+        data = str(self.get_token(self.user))
+
+        return {"token": data}
