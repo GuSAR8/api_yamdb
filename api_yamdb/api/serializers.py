@@ -97,18 +97,31 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        validators=[UniqueValidator(queryset=User.objects.all())],
-        required=True,
-    )
+
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
-    
+
     class Meta:
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
         model = User
+
+    def validate_email(self, attrs):
+        if attrs == self.context["request"].user:
+            raise serializers.ValidationError(
+                "Такой email уже зарегистрирован!"
+            )
+        return attrs
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "username", "email", "first_name", "last_name", "bio", "role",
+        )
+        read_only_fields = ("username", "email", "role",)
 
 
 class SignUpSerializer(serializers.ModelSerializer):

@@ -3,16 +3,17 @@ from api.permissions import IsUserAdminModeratorOrReadOnly, IsAdminOrReadOnly
 from api.serializers import (CommentSerializer, ReviewSerializer,
                              CategorySerializer, GenreSerializer,
                              TitleSerializer, SignUpSerializer,
-                             TokenSerializer, UserSerializer)
+                             TokenSerializer, UserSerializer,
+                             ProfileSerializer)
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
-from rest_framework import viewsets, mixins, filters
+from rest_framework import viewsets, mixins, filters, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -102,18 +103,17 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     search_fields = ('username',)
 
-    @action(
-        methods=['get', 'patch'],
-        detail=False,
-        url_path='me',
-        permission_classes=[IsAuthenticated]
-    )
-    def set_profile(self, request, pk=None):
-        user = get_object_or_404(User, pk=request.user.id)
-        serializer = self.get_serializer(user, data=request.data, partial=True)
+
+@api_view(["GET", "PATCH"])
+@permission_classes([IsAuthenticated, ])
+def get_profile(request):
+    if request.method == "PATCH":
+        serializer = ProfileSerializer(request.user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    serializer = ProfileSerializer(request.user)
+    return Response(serializer.data)
 
 
 @api_view(['POST'])
