@@ -2,7 +2,9 @@ import uuid
 
 from rest_framework.exceptions import ValidationError
 from api.filters import TitleFilter
-from api.permissions import IsUserAdminModeratorOrReadOnly, IsAdminOrReadOnly
+from api.permissions import (IsUserAdminModeratorOrReadOnly,
+                             IsAdminOrReadOnly,
+                             IsAdminOrSuperuser)
 from api.serializers import (CommentSerializer, ReviewSerializer,
                              CategorySerializer, GenreSerializer,
                              TitleSerializer, SignupSerializer,
@@ -99,17 +101,19 @@ class TitleViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrSuperuser]
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
 
 
-@api_view(["GET", "PATCH"])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated, ])
 def get_profile(request):
-    if request.method == "PATCH":
-        serializer = ProfileSerializer(request.user, data=request.data)
+    if request.method == 'PATCH':
+        serializer = ProfileSerializer(
+            request.user, data=request.data, partial=True
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -126,25 +130,25 @@ class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
 
-        username = serializer.initial_data.get("username")
-        email = serializer.initial_data.get("email")
+        username = serializer.initial_data.get('username')
+        email = serializer.initial_data.get('email')
 
         if User.objects.filter(username=username).exists():
             instance = User.objects.get(username=username)
             if instance.email != email:
-                raise ValidationError("У данного пользователя другая почта!")
+                raise ValidationError('У данного пользователя другая почта!')
             serializer.is_valid(raise_exception=False)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
         instance.set_unusable_password()
         instance.save()
-        email = serializer.validated_data["email"]
+        email = serializer.validated_data['email']
 
         code = uuid.uuid4()
         send_mail(
-            "КОД ПОДТВЕРЖДЕНИЯ",
-            f"Ваш код подтверждения!\n{code}",
-            "from@example.com",
+            'КОД ПОДТВЕРЖДЕНИЯ',
+            f'Ваш код подтверждения!\n{code}',
+            'from@example.com',
             [email],
             fail_silently=False,
         )

@@ -18,10 +18,10 @@ router.register(
     CommentViewSet,
     basename='comments')
 router.register('users', UserViewSet, basename='users')
-router.register("auth/signup", SignUpViewSet)
+router.register('auth/signup', SignUpViewSet)
 
 urlpatterns = [
-    path("users/me/", get_profile, name="get_profile"),
+    path('users/me/', get_profile, name='get_profile'),
     path('', include(router.urls)),
-    path("auth/token/", TokenView.as_view(), name="token"),
+    path('auth/token/', TokenView.as_view(), name='token'),
 ]
