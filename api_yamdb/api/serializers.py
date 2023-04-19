@@ -121,9 +121,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            "username", "email", "first_name", "last_name", "bio", "role",
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
-        read_only_fields = ("username", "email", "role",)
+        read_only_fields = ('username', 'email', 'role',)
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -132,12 +132,12 @@ class SignupSerializer(serializers.ModelSerializer):
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())])
 
-    def validate_email(self, attrs):
-        if attrs == self.context["request"].user:
+    def validate_email(self, value):
+        if value == self.context['request'].user:
             raise serializers.ValidationError(
                 "Такой email уже зарегистрирован!"
             )
-        return attrs
+        return value
 
     def validate_username(self, value):
         if value.lower() == 'me':
