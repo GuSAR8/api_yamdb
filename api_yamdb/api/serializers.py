@@ -1,3 +1,5 @@
+import re
+from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -101,7 +103,14 @@ class TitleSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
 
     email = serializers.EmailField(
+        max_length=254,
+        required=True,
         validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+
+    username = serializers.RegexField(
+        max_length=150,
+        regex=r'^[\w.@+-]+$',
     )
 
     class Meta:
@@ -118,6 +127,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+
+    email = serializers.EmailField(
+        max_length=254,
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+
+    username = serializers.RegexField(
+        max_length=150,
+        regex=r'^[\w.@+-]+$',
+    )
+
     class Meta:
         model = User
         fields = (
@@ -129,8 +150,14 @@ class ProfileSerializer(serializers.ModelSerializer):
 class SignupSerializer(serializers.ModelSerializer):
 
     email = serializers.EmailField(
+        max_length=254,
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())])
+
+    username = serializers.RegexField(
+        max_length=150,
+        regex=r'^[\w.@+-]+$',
+    )
 
     def validate_email(self, attrs):
         if attrs == self.context["request"].user:
