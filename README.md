@@ -1,2 +1,3 @@
-# api_yamdb
-api_yamdb
+# API YamDB
+## Описание
+New PRAKTIKUM project
