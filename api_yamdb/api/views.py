@@ -19,7 +19,7 @@ from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from reviews.models import Review, Title, Category, Genre
 from users.models import User
@@ -101,10 +101,12 @@ class TitleViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminOrSuperuser]
+    permission_classes = (IsAdminOrSuperuser,)
+    pagination_class = LimitOffsetPagination
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'username'
     search_fields = ('username',)
+    http_method_names = ('get', 'post', 'patch', 'delete',)
 
 
 @api_view(['GET', 'PATCH'])
@@ -118,7 +120,7 @@ def get_profile(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     serializer = ProfileSerializer(request.user)
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):

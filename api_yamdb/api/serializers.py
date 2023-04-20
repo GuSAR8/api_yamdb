@@ -6,6 +6,9 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Comment, Review, Title, Category, Genre
 from users.models import User
 
+CHECK = r'^[\w.@+-]+$'
+UNIQUE_VALID = [UniqueValidator(queryset=User.objects.all())]
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -103,12 +106,13 @@ class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         max_length=254,
         required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=UNIQUE_VALID
     )
 
     username = serializers.RegexField(
         max_length=150,
-        regex=r'^[\w.@+-]+$',
+        regex=CHECK,
+        validators=UNIQUE_VALID
     )
 
     class Meta:
@@ -116,25 +120,25 @@ class UserSerializer(serializers.ModelSerializer):
                   'last_name', 'bio', 'role')
         model = User
 
-    def validate_email(self, attrs):
-        if attrs == self.context["request"].user:
+    def validate_email(self, value):
+        if value == self.context["request"].user:
             raise serializers.ValidationError(
-                "Такой email уже зарегистрирован!"
+                "Такой email уже существует!"
             )
-        return attrs
+        return value
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-
     email = serializers.EmailField(
         max_length=254,
         required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        validators=UNIQUE_VALID
     )
 
     username = serializers.RegexField(
         max_length=150,
-        regex=r'^[\w.@+-]+$',
+        regex=CHECK,
+        validators=UNIQUE_VALID
     )
 
     class Meta:
@@ -150,11 +154,13 @@ class SignupSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         max_length=254,
         required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())])
+        validators=UNIQUE_VALID
+    )
 
     username = serializers.RegexField(
         max_length=150,
-        regex=r'^[\w.@+-]+$',
+        regex=CHECK,
+        validators=UNIQUE_VALID
     )
 
     def validate_email(self, value):
