@@ -48,6 +48,12 @@ class User(AbstractUser):  # Создаем свой класс пользова
         choices=ROLES,
         default=USER
     )
+    confirmation_code = models.CharField(
+        max_length=36,
+        null=True,
+        blank=True,
+        verbose_name="Код потдверждения",
+    )
 
     class Meta:
         verbose_name = 'Пользователь'
