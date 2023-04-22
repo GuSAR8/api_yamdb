@@ -1,8 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Comment, Review, Title, Category, Genre
 from users.models import User
 
@@ -151,51 +149,46 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class SignupSerializer(serializers.ModelSerializer):
 
-    email = serializers.EmailField(
-        max_length=254,
-        required=True,
-        validators=UNIQUE_VALID
-    )
+    email = serializers.EmailField()
+    username = serializers.CharField(max_length=150)
 
-    username = serializers.RegexField(
-        max_length=150,
-        regex=CHECK,
-        validators=UNIQUE_VALID
-    )
-
-    def validate_email(self, value):
-        if value == self.context['request'].user:
+    def validate_username(self, name):
+        if name == 'me':
             raise serializers.ValidationError(
-                "Такой email уже зарегистрирован!"
-            )
-        return value
+                'Это имя не может быть использовано!')
+        return name
 
-    def validate_username(self, value):
-        if value.lower() == 'me':
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        if (
+            User.objects.filter(username=username).exists()
+            and User.objects.get(username=username).email != email
+        ):
             raise serializers.ValidationError(
-                'Называть "me" запрещено!!! Придумайте другое имя.'
-            )
-        return value
+                'Пользователь с таким именем уже существует')
+        if (
+            User.objects.filter(email=email).exists()
+            and User.objects.get(email=email).username != username
+        ):
+            raise serializers.ValidationError(
+                'Для авторизации требуется ввести электронную почту')
+        return data
 
     class Meta:
         fields = ('username', 'email')
         model = User
 
 
-class TokenSerializer(TokenObtainSerializer):
-    token_class = AccessToken
+class AuthSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField(max_length=255)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["confirmation_code"] = serializers.CharField(
-            required=False
-        )
-        self.fields["password"] = serializers.HiddenField(default="")
-
-    def validate(self, attrs):
-        self.user = get_object_or_404(User, username=attrs["username"])
-        if self.user.confirmation_code != attrs["confirmation_code"]:
-            raise serializers.ValidationError("Неверный код подтверждения")
-        data = str(self.get_token(self.user))
-
-        return {"token": data}
+    def validate(self, data):
+        username = data.get('username')
+        confirmation_code = data.get('confirmation_code')
+        if username is None:
+            raise serializers.ValidationError('Отсутствует имя')
+        if confirmation_code is None:
+            raise serializers.ValidationError('Отсутствует код')
+        return data

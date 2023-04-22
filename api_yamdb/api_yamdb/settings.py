@@ -131,6 +131,8 @@ REST_FRAMEWORK = {
 
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = ((BASE_DIR, "sent_emails"))
+DEFAULT_EMAIL_SUBJECT = 'Your confirmation code'
+DEFAULT_FROM_EMAIL = 'from@yamdb.com'
 
 SIMPLE_JWT = {
     # Устанавливаем срок жизни токена

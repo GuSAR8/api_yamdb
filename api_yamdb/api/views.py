@@ -1,6 +1,5 @@
 import uuid
 
-from rest_framework.exceptions import ValidationError
 from api.filters import TitleFilter
 from api.permissions import (IsUserAdminModeratorOrReadOnly,
                              IsAdminOrReadOnly,
@@ -8,8 +7,10 @@ from api.permissions import (IsUserAdminModeratorOrReadOnly,
 from api.serializers import (CommentSerializer, ReviewSerializer,
                              CategorySerializer, GenreSerializer,
                              TitleSerializer, SignupSerializer,
-                             TokenSerializer, UserSerializer,
+                             AuthSerializer, UserSerializer,
                              ProfileSerializer)
+from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -17,7 +18,6 @@ from rest_framework import viewsets, mixins, filters, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -123,42 +123,35 @@ def get_profile(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SignUpViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
-
-    queryset = User.objects.all()
-    serializer_class = SignupSerializer
-    permission_classes = (AllowAny,)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
-        username = serializer.initial_data.get('username')
-        email = serializer.initial_data.get('email')
-
-        if User.objects.filter(username=username).exists():
-            instance = User.objects.get(username=username)
-            if instance.email != email:
-                raise ValidationError('У данного пользователя другая почта!')
-            serializer.is_valid(raise_exception=False)
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-        instance.set_unusable_password()
-        instance.save()
-        email = serializer.validated_data['email']
-
-        code = uuid.uuid4()
-        send_mail(
-            'КОД ПОДТВЕРЖДЕНИЯ',
-            f'Ваш код подтверждения!\n{code}',
-            'from@example.com',
-            [email],
-            fail_silently=False,
-        )
-        instance.confirmation_code = code
-        instance.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def sign_up(request):
+    serializer = SignupSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.validated_data['email']
+    confirmation_code = str(uuid.uuid3(uuid.NAMESPACE_X500, email))
+    user, created = User.objects.get_or_create(
+        **serializer.validated_data,
+        confirmation_code=confirmation_code
+    )
+    send_mail(
+        subject=settings.DEFAULT_EMAIL_SUBJECT,
+        message=user.confirmation_code,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=(email,))
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class TokenView(TokenObtainPairView):
-
-    serializer_class = TokenSerializer
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def get_token(request):
+    serializer = AuthSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
+    user = get_object_or_404(User, username=username)
+    if confirmation_code != user.confirmation_code:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+    refresh = RefreshToken.for_user(user)
+    return Response({'token': str(refresh.access_token)},
+                    status=status.HTTP_200_OK)
