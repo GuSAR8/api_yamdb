@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from reviews.models import Comment, Review, Title, Category, Genre
 from users.models import User
+from users.validators import validate_username
 
 CHECK = r'^[\w.@+-]+$'
 UNIQUE_VALID = [UniqueValidator(queryset=User.objects.all())]
@@ -102,6 +103,15 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
+    username = serializers.CharField(
+        validators=[UniqueValidator(queryset=User.objects.all()),
+                    validate_username]
+    )
+    email = serializers.EmailField(
+        validators=[UniqueValidator(queryset=User.objects.all())],
+        max_length=254
+    )
+
     class Meta:
         fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role'
                   )
@@ -118,6 +128,14 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        validators=[UniqueValidator(queryset=User.objects.all()),
+                    validate_username]
+    )
+    email = serializers.EmailField(
+        validators=[UniqueValidator(queryset=User.objects.all())],
+        max_length=254
+    )
 
     class Meta:
         fields = ('email', 'username')
