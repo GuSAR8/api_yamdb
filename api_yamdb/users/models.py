@@ -1,59 +1,75 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from .validators import validate_username
 
 
-class User(AbstractUser):  # Создаем свой класс пользователя
-    #  Прописываем возможные роли
+class User(AbstractUser):
     ADMIN = 'admin'
     MODERATOR = 'moderator'
     USER = 'user'
+
     ROLES = [
-        (ADMIN, 'Администратор'),
-        (MODERATOR, 'Модератор'),
-        (USER, 'Пользователь'),
+        (ADMIN, ADMIN),
+        (MODERATOR, MODERATOR),
+        (USER, USER),
     ]
 
     username = models.CharField(
-        verbose_name='Логин',
+        'Логин',
+        validators=(validate_username,),
         max_length=150,
         unique=True,
+        blank=True,
+        null=False
     )
 
     email = models.EmailField(
-        verbose_name='Почта',
+        'Почта',
         max_length=254,
         unique=True,
+        blank=True,
+        null=False
     )
 
     first_name = models.CharField(
         verbose_name='Имя',
         max_length=150,
-        null=True,
+        blank=True,
     )
 
     last_name = models.CharField(
-        verbose_name='Фамилия',
+        'Фамилия',
         max_length=150,
-        null=True,
+        blank=True,
     )
 
     bio = models.TextField(
-        verbose_name='Биография',
-        null=True,
+        'Биография',
+        blank=True,
     )
 
     role = models.CharField(
-        verbose_name='Статус',
+        'Статус',
         max_length=9,
         choices=ROLES,
-        default=USER
+        default=USER,
+        blank=True
     )
-    confirmation_code = models.CharField(
-        max_length=36,
-        null=True,
-        blank=True,
-        verbose_name="Код потдверждения",
+    confirmation_code = models.UUIDField(
+        'Код потдверждения',
+        default=uuid.uuid4,
+        unique=True,
+        editable=False,
     )
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
 
     class Meta:
         verbose_name = 'Пользователь'

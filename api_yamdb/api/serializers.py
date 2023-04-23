@@ -1,8 +1,7 @@
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Comment, Review, Title, Category, Genre
 from users.models import User
 
@@ -103,99 +102,30 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
-    email = serializers.EmailField(
-        max_length=254,
-        required=True,
-        validators=UNIQUE_VALID
-    )
-
-    username = serializers.RegexField(
-        max_length=150,
-        regex=CHECK,
-        validators=UNIQUE_VALID
-    )
-
     class Meta:
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'role')
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role'
+                  )
         model = User
-
-    def validate_email(self, value):
-        if value == self.context["request"].user:
-            raise serializers.ValidationError(
-                "Такой email уже существует!"
-            )
-        return value
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        max_length=254,
-        required=True,
-        validators=UNIQUE_VALID
-    )
-
-    username = serializers.RegexField(
-        max_length=150,
-        regex=CHECK,
-        validators=UNIQUE_VALID
-    )
 
     class Meta:
         model = User
-        fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
-        )
-        read_only_fields = ('username', 'email', 'role',)
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role'
+                  )
+        read_only_fields = ('role',)
 
 
-class SignupSerializer(serializers.ModelSerializer):
-
-    email = serializers.EmailField(
-        max_length=254,
-        required=True,
-        validators=UNIQUE_VALID
-    )
-
-    username = serializers.RegexField(
-        max_length=150,
-        regex=CHECK,
-        validators=UNIQUE_VALID
-    )
-
-    def validate_email(self, value):
-        if value == self.context['request'].user:
-            raise serializers.ValidationError(
-                "Такой email уже зарегистрирован!"
-            )
-        return value
-
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                'Называть "me" запрещено!!! Придумайте другое имя.'
-            )
-        return value
+class SignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('username', 'email')
+        fields = ('email', 'username')
         model = User
 
 
-class TokenSerializer(TokenObtainSerializer):
-    token_class = AccessToken
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["confirmation_code"] = serializers.CharField(
-            required=False
-        )
-        self.fields["password"] = serializers.HiddenField(default="")
-
-    def validate(self, attrs):
-        self.user = get_object_or_404(User, username=attrs["username"])
-        if self.user.confirmation_code != attrs["confirmation_code"]:
-            raise serializers.ValidationError("Неверный код подтверждения")
-        data = str(self.get_token(self.user))
-
-        return {"token": data}
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150, validators=[UnicodeUsernameValidator, ]
+    )
+    confirmation_code = serializers.CharField()
