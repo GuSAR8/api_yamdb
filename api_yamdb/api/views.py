@@ -14,10 +14,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.core.mail import send_mail
 from django.db.models import Avg
 from rest_framework.views import APIView
-from rest_framework import viewsets, mixins, filters
+from rest_framework import viewsets, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
+from .mixins import GetListCreateDeleteViewSet
 from api_yamdb.settings import EMAIL_HOST
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -62,10 +63,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(GetListCreateDeleteViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = PageNumberPagination
@@ -75,10 +73,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     lookup_field = 'slug'
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(GetListCreateDeleteViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = PageNumberPagination
