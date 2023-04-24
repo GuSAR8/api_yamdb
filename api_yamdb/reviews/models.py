@@ -3,6 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 from users.models import User
+from .validators import validate_current_year
 
 
 class Genre(models.Model):
@@ -41,9 +42,7 @@ class Title(models.Model):
                             max_length=256)
     year = models.PositiveIntegerField(
         verbose_name='Год выпуска',
-        validators=(
-            MaxValueValidator(date.today().year),
-        ),
+        validators=(validate_current_year,),
         db_index=True,
     )
     category = models.ForeignKey(
