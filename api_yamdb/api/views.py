@@ -131,8 +131,8 @@ class SignUpViewSet(APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        if (User.objects.filter(username=request.data.get('username'),
-                                email=request.data.get('email'))):
+        if User.objects.filter(username=request.data.get('username'),
+                               email=request.data.get('email')).exists():
             user = User.objects.get(username=request.data.get('username'))
             serializer = SignUpSerializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
