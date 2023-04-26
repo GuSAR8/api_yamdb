@@ -1,6 +1,8 @@
 import uuid
-from django.db import models
+
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+
 from .validators import validate_username
 
 
@@ -51,7 +53,7 @@ class User(AbstractUser):
 
     role = models.CharField(
         'Статус',
-        max_length=9,
+        max_length=150,
         choices=ROLES,
         default=USER,
         blank=True

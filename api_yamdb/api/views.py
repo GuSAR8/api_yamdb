@@ -1,29 +1,29 @@
 from api.filters import TitleFilter
-from api.permissions import (IsUserAdminModeratorOrReadOnly,
-                             IsAdminOrReadOnly, SelfEditUserOnlyPermission,
-                             IsAdminOrSuperuser)
-from api.serializers import (CommentSerializer, ReviewSerializer,
-                             CategorySerializer, GenreSerializer,
-                             TitleSerializer, SignUpSerializer,
-                             TokenSerializer, UserSerializer,
-                             ProfileSerializer)
-from rest_framework.filters import SearchFilter
-from rest_framework.decorators import action
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
-from django_filters.rest_framework import DjangoFilterBackend
+from api.permissions import (IsAdminOrReadOnly, IsAdminOrSuperuser,
+                             IsUserAdminModeratorOrReadOnly,
+                             SelfEditUserOnlyPermission)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, ProfileSerializer,
+                             ReviewSerializer, SignUpSerializer,
+                             TitleSerializer, TokenSerializer, UserSerializer)
 from django.core.mail import send_mail
 from django.db.models import Avg
-from rest_framework.views import APIView
-from rest_framework import viewsets, mixins, filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import (LimitOffsetPagination,
                                        PageNumberPagination)
-from api_yamdb.settings import EMAIL_HOST
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Review, Title, Category, Genre
+from reviews.models import Category, Genre, Review, Title
 from users.models import User
+
+from api_yamdb.settings import EMAIL_HOST
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
