@@ -9,7 +9,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets
+from rest_framework import filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
@@ -24,6 +24,8 @@ from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
 from api_yamdb.settings import EMAIL_HOST
+
+from .mixins import GetListCreateDeleteViewSet
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -62,10 +64,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(GetListCreateDeleteViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = PageNumberPagination
@@ -75,10 +74,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     lookup_field = 'slug'
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(GetListCreateDeleteViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     pagination_class = PageNumberPagination
@@ -136,8 +132,8 @@ class SignUpViewSet(APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        if (User.objects.filter(username=request.data.get('username'),
-                                email=request.data.get('email'))):
+        if User.objects.filter(username=request.data.get('username'),
+                               email=request.data.get('email')).exists():
             user = User.objects.get(username=request.data.get('username'))
             serializer = SignUpSerializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
