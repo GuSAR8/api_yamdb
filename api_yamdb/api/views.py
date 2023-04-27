@@ -1,11 +1,3 @@
-from api.filters import TitleFilter
-from api.permissions import (IsAdminOrReadOnly, IsAdminOrSuperuser,
-                             IsUserAdminModeratorOrReadOnly,
-                             SelfEditUserOnlyPermission)
-from api.serializers import (CategorySerializer, CommentSerializer,
-                             GenreSerializer, ProfileSerializer,
-                             ReviewSerializer, SignUpSerializer,
-                             TitleSerializer, TokenSerializer, UserSerializer)
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,10 +12,18 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from api.filters import TitleFilter
+from api.permissions import (IsAdminOrReadOnly, IsAdminOrSuperuser,
+                             IsUserAdminModeratorOrReadOnly,
+                             SelfEditUserOnlyPermission)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, ProfileSerializer,
+                             ReviewSerializer, SignUpSerializer,
+                             TitleSerializer, TokenSerializer, UserSerializer)
+from api_yamdb.settings import EMAIL_HOST
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
-
-from api_yamdb.settings import EMAIL_HOST
 
 from .mixins import GetListCreateDeleteViewSet
 
