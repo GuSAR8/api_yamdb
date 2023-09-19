@@ -24,3 +24,7 @@
  <http://127.0.0.1:8000/redoc/>
 
 ## Авторы
+
+https://github.com/GuSAR8
+https://github.com/Vladiiv13
+https://github.com/xshumaherx
